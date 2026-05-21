@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>锂电池循环寿命数据离群点去除工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .section-border {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors;
+        }
+        .data-table {
+            @apply w-full border-collapse mt-2 text-sm;
+        }
+        .data-table th, .data-table td {
+            @apply border border-gray-200 px-2 py-1 text-center;
+        }
+        .data-table th {
+            @apply bg-gray-50 font-medium;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-6">
+            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">锂电池循环寿命数据 - 离群点去除工具</h1>
+            <p class="text-gray-600 mt-2 text-lg">支持直接粘贴 Excel 两列数据（循环周次 + 寿命/容量），自动绘图、自动剔除异常点</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：数据输入与参数 -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-white p-4 section-border">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">📥 数据输入（必须粘贴 2 列）</h2>
+                    
+                    <!-- 超清晰格式提示 -->
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-2 text-sm">
+                        <strong class="text-blue-700">✅ 正确格式（直接从Excel复制两列）：</strong><br>
+                        第1列 = 循环周次<br>
+                        第2列 = 寿命/容量值<br>
+                        支持空格 / Tab 分隔
+                    </div>
+
+                    <textarea id="dataInput" rows="10" class="w-full p-2 border border-gray-300 rounded" 
+                    placeholder="请粘贴 2 列数据，示例：
+1	100.0
+2	99.2
+3	98.5
+4	150.0   ← 异常点
+5	97.1
+6	95.8
+7	94.2
+8	93.5"></textarea>
+
+                    <div class="flex gap-2 mt-3">
+                        <button id="processBtn" class="btn-primary flex-1">✅ 处理数据</button>
+                        <button id="clearBtn" class="btn-secondary flex-1">🗑 清空输入</button>
+                    </div>
+                </div>
+
+                <!-- 参数 -->
+                <div class="bg-white p-4 section-border">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">⚙️ 检测参数</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm font-medium">滑动窗口大小</label>
+                            <input type="number" id="windowSize" value="5" min="3" max="20" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">偏离阈值</label>
+                            <input type="number" id="threshold" value="2" min="1" max="5" step="0.5" class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计 -->
+                <div class="bg-white p-4 section-border">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">📊 处理结果统计</h2>
+                    <div class="text-sm space-y-1">
+                        <p>总数据：<span id="totalPoints">0</span></p>
+                        <p>已清空异常值：<span id="outlierPoints" class="text-red-600">0</span></p>
+                        <p>有效数据：<span id="validPoints" class="text-green-600">0</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：图表 + 表格 -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-4 section-border h-[420px]">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">📈 循环寿命曲线（原始 vs 清洗后）</h2>
+                    <canvas id="dataChart"></canvas>
+                </div>
+
+                <div class="bg-white p-4 section-border">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">📋 数据表格（保留全部行，仅清空异常值）</h2>
+                    <div class="max-h-[320px] overflow-y-auto">
+                        <table id="resultTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>循环周次</th>
+                                    <th>寿命/容量值</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="3">请粘贴数据并点击处理</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="copyBtn" class="btn-primary mt-3 w-full">📋 复制清洗后数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化图表
+        const ctx = document.getElementById('dataChart').getContext('2d');
+        let dataChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: '原始数据', borderColor: '#94a3b8', borderWidth: 2, pointRadius: 3, fill: false, tension:0 },
+                    { label: '清洗后数据', borderColor: '#2563eb', borderWidth: 3, pointRadius: 4, fill: false, tension:0.1, spanGaps: true }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        type: 'linear',
+                        title: { display: true, text: '循环周次' }
+                    },
+                    y: { title: { display: true, text: '寿命/容量值' } }
+                }
+            }
+        });
+
+        // DOM
+        const dataInput = document.getElementById('dataInput');
+        const processBtn = document.getElementById('processBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // 清空
+        clearBtn.onclick = () => {
+            dataInput.value = '';
+            dataChart.data.datasets[0].data = [];
+            dataChart.data.datasets[1].data = [];
+            dataChart.update();
+            document.querySelector('#resultTable tbody').innerHTML = `<tr><td colspan="3">请粘贴数据并点击处理</td></tr>`;
+            document.getElementById('totalPoints').textContent = 0;
+            document.getElementById('outlierPoints').textContent = 0;
+            document.getElementById('validPoints').textContent = 0;
+        };
+
+        // 核心处理（保留所有行，仅清空异常值）
+        processBtn.onclick = () => {
+            const text = dataInput.value.trim();
+            if (!text) { alert("请输入数据！"); return; }
+
+            // 解析数据
+            const lines = text.split('\n').filter(i => i.trim());
+            const raw = [];
+            for (let line of lines) {
+                const parts = line.trim().split(/\s+/).filter(p => p);
+                if (parts.length >= 2) {
+                    const x = parseFloat(parts[0]);
+                    const y = parseFloat(parts[1]);
+                    if (!isNaN(x) && !isNaN(y)) raw.push({ x, y });
+                }
+            }
+
+            if (raw.length < 5) { alert("有效数据不足5条"); return; }
+
+            // 参数
+            const winSize = parseInt(document.getElementById('windowSize').value) || 5;
+            const threshold = parseFloat(document.getElementById('threshold').value) || 2;
+            
+            // 标记异常点（不删除，只标记）
+            const processed = JSON.parse(JSON.stringify(raw));
+            let outlierCount = 0;
+            let validCount = 0;
+
+            for (let i = 0; i < raw.length; i++) {
+                const half = Math.floor(winSize / 2);
+                const start = Math.max(0, i - half);
+                const end = Math.min(raw.length - 1, i + half);
+                const window = raw.slice(start, end + 1).map(p => p.y);
+
+                const mean = window.reduce((a,b)=>a+b,0) / window.length;
+                const std = Math.sqrt(window.reduce((s,v)=>s+Math.pow(v-mean,2),0)/window.length);
+                
+                // 判断异常：清空值，保留周次
+                if (Math.abs(raw[i].y - mean) > threshold * std) {
+                    processed[i].y = null; // 清空数值
+                    outlierCount++;
+                } else {
+                    validCount++;
+                }
+            }
+
+            // 绘图
+            dataChart.data.datasets[0].data = raw.map(p => ({x:p.x, y:p.y}));
+            dataChart.data.datasets[1].data = processed.map(p => p.y === null ? {x:p.x, y:null} : {x:p.x, y:p.y});
+            dataChart.update();
+
+            // 表格：保留所有行，异常值显示为空
+            const tbody = document.querySelector('#resultTable tbody');
+            tbody.innerHTML = '';
+            processed.forEach((p, idx) => {
+                const original = raw[idx];
+                if (p.y === null) {
+                    tbody.innerHTML += `<tr><td>${p.x}</td><td class="text-red-500"></td><td class="text-red-600">已清空</td></tr>`;
+                } else {
+                    tbody.innerHTML += `<tr><td>${p.x}</td><td>${p.y.toFixed(2)}</td><td class="text-green-600">有效</td></tr>`;
+                }
+            });
+
+            // 统计
+            document.getElementById('totalPoints').textContent = raw.length;
+            document.getElementById('outlierPoints').textContent = outlierCount;
+            document.getElementById('validPoints').textContent = validCount;
+        };
+
+        // 复制
+        copyBtn.onclick = async () => {
+            let txt = '';
+            document.querySelectorAll('#resultTable tbody tr').forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                const x = tds[0].innerText;
+                const y = tds[1].innerText || '';
+                txt += x + '\t' + y + '\n';
+            });
+            await navigator.clipboard.writeText(txt);
+            alert("✅ 已复制全部数据（异常值已清空）！");
+        };
+    </script>
+</body>
+</html>

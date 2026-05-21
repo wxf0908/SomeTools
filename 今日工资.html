@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时工资显示器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* 全局科技感背景 */
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #3b0764 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 网格背景特效 */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* 主容器 - 玻璃拟态效果 */
+        .main-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 60px 40px;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* 霓虹标题 */
+        .title {
+            font-size: 28px;
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #7dd3fc, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+
+        /* 时间显示 */
+        .time-display {
+            font-size: 48px;
+            font-weight: 600;
+            color: #e0f2fe;
+            text-shadow: 0 0 20px rgba(125, 211, 252, 0.6);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        /* 工资显示 */
+        .salary-label {
+            font-size: 18px;
+            color: #cbd5e1;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .salary-display {
+            font-size: 64px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fb7185, #fb923c, #fbbf24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 25px rgba(251, 113, 133, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* 状态显示 */
+        .status-display {
+            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+
+        /* 设置按钮 */
+        .settings-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #a78bfa;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: rotate(45deg);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+        }
+
+        /* 设置弹窗 - 玻璃拟态 */
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(30, 27, 75, 0.9);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            color: #a78bfa;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+        }
+
+        /* 操作按钮 */
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-reset:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-close {
+            background: rgba(139, 92, 246, 0.2);
+            color: #ddd6fe;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-close:hover {
+            background: rgba(139, 92, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 主界面 -->
+    <div class="main-container">
+        <button class="settings-btn" id="openSettings">⚙️</button>
+        <h1 class="title">实时工资显示器</h1>
+        <div class="time-display" id="currentTime">00:00:00</div>
+        <div class="salary-label">今日已赚取</div>
+        <div class="salary-display" id="todaySalary">0.00 元</div>
+        <div class="status-display" id="workStatus">未开始工作</div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">工作参数设置</h3>
+                <button class="close-btn" id="closeSettings">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">月薪（元）</label>
+                <input type="number" class="form-input" id="monthSalary" value="10000" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">早上上班时间</label>
+                <input type="time" class="form-input" id="morningStart" value="09:00">
+            </div>
+            <div class="form-group">
+                <label class="form-label">早上下班时间</label>
+                <input type="time" class="form-input" id="morningEnd" value="12:00">
+            </div>
+            <div class="form-group">
+                <label class="form-label">下午上班时间</label>
+                <input type="time" class="form-input" id="afternoonStart" value="13:30">
+            </div>
+            <div class="form-group">
+                <label class="form-label">下午下班时间</label>
+                <input type="time" class="form-input" id="afternoonEnd" value="18:00">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-reset" id="resetSalary">重置今日工资</button>
+                <button class="btn btn-close" id="saveSettings">保存并关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const currentTimeEl = document.getElementById('currentTime');
+        const todaySalaryEl = document.getElementById('todaySalary');
+        const workStatusEl = document.getElementById('workStatus');
+        const settingsModal = document.getElementById('settingsModal');
+        const openSettings = document.getElementById('openSettings');
+        const closeSettings = document.getElementById('closeSettings');
+        const saveSettings = document.getElementById('saveSettings');
+        const resetSalaryBtn = document.getElementById('resetSalary');
+
+        // 配置参数
+        const WORK_DAYS_PER_MONTH = 21.75;
+        const monthSalaryEl = document.getElementById('monthSalary');
+        const morningStartEl = document.getElementById('morningStart');
+        const morningEndEl = document.getElementById('morningEnd');
+        const afternoonStartEl = document.getElementById('afternoonStart');
+        const afternoonEndEl = document.getElementById('afternoonEnd');
+
+        // 弹窗控制
+        openSettings.addEventListener('click', () => settingsModal.classList.add('active'));
+        function closeModal() { settingsModal.classList.remove('active'); }
+        closeSettings.addEventListener('click', closeModal);
+        saveSettings.addEventListener('click', closeModal);
+
+        // 时间转换
+        function timeToSeconds(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 3600 + m * 60;
+        }
+
+        // 计算已工作秒数（核心：从上班时间开始算）
+        function getWorkedSeconds() {
+            const now = new Date();
+            const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            const amStart = timeToSeconds(morningStartEl.value);
+            const amEnd = timeToSeconds(morningEndEl.value);
+            const pmStart = timeToSeconds(afternoonStartEl.value);
+            const pmEnd = timeToSeconds(afternoonEndEl.value);
+
+            let worked = 0;
+            if (nowSec > amStart) worked += Math.min(nowSec, amEnd) - amStart;
+            if (nowSec > pmStart) worked += Math.min(nowSec, pmEnd) - pmStart;
+            return Math.max(worked, 0);
+        }
+
+        // 每秒工资
+        function getPerSecondSalary() {
+            const monthSalary = parseFloat(monthSalaryEl.value) || 0;
+            if (monthSalary <= 0) return 0;
+            const daySalary = monthSalary / WORK_DAYS_PER_MONTH;
+            const totalWorkDaySec = (timeToSeconds(morningEndEl.value) - timeToSeconds(morningStartEl.value)) + (timeToSeconds(afternoonEndEl.value) - timeToSeconds(afternoonStartEl.value));
+            return totalWorkDaySec <= 0 ? 0 : daySalary / totalWorkDaySec;
+        }
+
+        // 状态与样式
+        function getWorkStatus() {
+            const nowSec = new Date().getHours() * 3600 + new Date().getMinutes() * 60 + new Date().getSeconds();
+            const amStart = timeToSeconds(morningStartEl.value), amEnd = timeToSeconds(morningEndEl.value);
+            const pmStart = timeToSeconds(afternoonStartEl.value), pmEnd = timeToSeconds(afternoonEndEl.value);
+            
+            if (nowSec < amStart) return { text: '😴 未到上班时间', bg: 'rgba(100, 116, 139, 0.2)', color: '#94a3b8' };
+            if ((nowSec >= amStart && nowSec <= amEnd) || (nowSec >= pmStart && nowSec <= pmEnd)) return { text: '💼 工作中 · 薪资增长中', bg: 'rgba(74, 222, 128, 0.2)', color: '#4ade80' };
+            return { text: '🏠 今日工作已完成', bg: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' };
+        }
+
+        // 格式化时间
+        function formatTime(date) {
+            const h = String(date.getHours()).padStart(2, '0');
+            const m = String(date.getMinutes()).padStart(2, '0');
+            const s = String(date.getSeconds()).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        // 实时更新
+        function update() {
+            const now = new Date();
+            currentTimeEl.textContent = formatTime(now);
+
+            const workedSec = getWorkedSeconds();
+            const perSec = getPerSecondSalary();
+            const totalSalary = workedSec * perSec;
+
+            todaySalaryEl.textContent = totalSalary.toFixed(2) + ' 元';
+            
+            const status = getWorkStatus();
+            workStatusEl.textContent = status.text;
+            workStatusEl.style.background = status.bg;
+            workStatusEl.style.color = status.color;
+        }
+
+        // 重置工资
+        resetSalaryBtn.addEventListener('click', update);
+
+        // 启动
+        setInterval(update, 1000);
+        update();
+    </script>
+</body>
+</html>
