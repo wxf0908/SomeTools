@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>我的在线工具集</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --border: #e2e8f0;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --text-light: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* 导航栏 */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      box-shadow: var(--shadow);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* 主题切换按钮 */
+    #themeToggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      transition: 0.2s;
+    }
+    #themeToggle:hover {
+      background: var(--border);
+    }
+
+    /* 简介区域 */
+    .hero {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+    .hero h1 {
+      font-size: 36px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-light);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* 工具卡片网格 */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .tool-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 28px 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+
+    .tool-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .tool-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .tool-desc {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    .tool-link {
+      margin-top: auto;
+      padding-top: 12px;
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* 分类标题 */
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 50px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 页脚 */
+    footer {
+      margin-top: 80px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-light);
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 28px;
+      }
+      .tools-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 480px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">🧰 我的在线工具</div>
+        <div class="nav-right">
+          <button id="themeToggle">🌙</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 头部简介 -->
+  <section class="hero">
+    <div class="container">
+      <h1>实用网页小工具集合</h1>
+      <p>基于纯 HTML / CSS / JS 编写，无需安装，打开即用，全部开源免费</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <!-- 常用工具 -->
+    <h2 class="section-title">常用工具</h2>
+    <div class="tools-grid">
+      <!-- 工具1 -->
+      <a class="tool-card" href="tools/calculator.html" target="_blank">
+        <div class="tool-icon">🧮</div>
+        <div class="tool-title">科学计算器</div>
+        <div class="tool-desc">支持加减乘除、平方、开方、括号运算，日常计算快速使用</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+
+      <!-- 工具2 -->
+      <a class="tool-card" href="tools/converter.html" target="_blank">
+        <div class="tool-icon">📏</div>
+        <div class="tool-title">单位换算器</div>
+        <div class="tool-desc">长度、重量、温度、时间、速度等常用单位一键转换</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+
+      <!-- 工具3 -->
+      <a class="tool-card" href="tools/qrcode.html" target="_blank">
+        <div class="tool-icon">🔳</div>
+        <div class="tool-title">二维码生成</div>
+        <div class="tool-desc">输入文本、链接，一键生成可下载的二维码图片</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+
+      <!-- 工具4 -->
+      <a class="tool-card" href="tools/timer.html" target="_blank">
+        <div class="tool-icon">⏱️</div>
+        <div class="tool-title">倒计时工具</div>
+        <div class="tool-desc">学习、工作专注计时，支持自定义时间与提醒</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+    </div>
+
+    <!-- 开发工具 -->
+    <h2 class="section-title">开发辅助</h2>
+    <div class="tools-grid">
+      <a class="tool-card" href="tools/json.html" target="_blank">
+        <div class="tool-icon>📄</div>
+        <div class="tool-title">JSON格式化</div>
+        <div class="tool-desc">格式化、压缩、校验JSON代码，方便调试接口</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+
+      <a class="tool-card" href="tools/timestamp.html" target="_blank">
+        <div class="tool-icon">⏰</div>
+        <div class="tool-title">时间戳转换</div>
+        <div class="tool-desc">Unix时间戳与日期时间互转，开发者常用工具</div>
+        <div class="tool-link">打开使用 →</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>© 2026 我的工具集 | 托管于 GitHub Pages | 纯静态网页工具</p>
+    </div>
+  </footer>
+
+  <!-- 主题切换 -->
+  <script>
+    const toggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // 读取本地存储主题
+    if (localStorage.getItem('theme') === 'dark') {
+      body.setAttribute('data-theme', 'dark');
+      toggle.textContent = '☀️';
+    }
+
+    toggle.addEventListener('click', () => {
+      if (body.getAttribute('data-theme') === 'dark') {
+        body.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        toggle.textContent = '🌙';
+      } else {
+        body.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        toggle.textContent = '☀️';
+      }
+    });
+  </script>
+</body>
+</html>
