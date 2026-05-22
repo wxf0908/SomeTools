@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>我的在线工具集</title>
+  <title>我的在线工具集 - 实用网页小工具</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -21,8 +21,12 @@
       --text-light: #64748b;
       --primary: #3b82f6;
       --primary-hover: #2563eb;
+      --secondary: #8b5cf6;
       --border: #e2e8f0;
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
 
     [data-theme="dark"] {
@@ -30,10 +34,10 @@
       --card: #1e293b;
       --text: #f1f5f9;
       --text-light: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #60a5fa;
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
       --border: #334155;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 
     body {
@@ -42,13 +46,13 @@
       color: var(--text);
       line-height: 1.6;
       transition: background 0.3s, color 0.3s;
-      padding-bottom: 60px;
+      overflow-x: hidden;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 24px;
     }
 
     /* 导航栏 */
@@ -57,7 +61,8 @@
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
-      z-index: 99;
+      z-index: 100;
+      backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
     }
 
@@ -65,138 +70,505 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 70px;
+      height: 72px;
     }
 
     .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--primary);
+      font-size: 22px;
+      font-weight: 800;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
     }
 
-    /* 主题切换按钮 */
     #themeToggle {
       background: transparent;
-      border: 1px solid var(--border);
-      width: 40px;
-      height: 40px;
+      border: 2px solid var(--border);
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       color: var(--text);
-      transition: 0.2s;
-    }
-    #themeToggle:hover {
-      background: var(--border);
+      font-size: 20px;
+      transition: all 0.3s;
     }
 
-    /* 简介区域 */
+    #themeToggle:hover {
+      transform: rotate(20deg) scale(1.1);
+      border-color: var(--primary);
+    }
+
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      background: var(--gradient-1);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .github-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Hero 区域 */
     .hero {
       text-align: center;
-      padding: 60px 0 40px;
+      padding: 80px 0 60px;
+      position: relative;
+      overflow: hidden;
     }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+      animation: pulse 15s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
     .hero h1 {
-      font-size: 36px;
-      margin-bottom: 12px;
-      font-weight: 700;
+      font-size: 48px;
+      margin-bottom: 16px;
+      font-weight: 800;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeInUp 0.6s ease-out;
     }
+
     .hero p {
-      font-size: 18px;
+      font-size: 20px;
       color: var(--text-light);
+      max-width: 650px;
+      margin: 0 auto 24px;
+      animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 32px;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 搜索框 */
+    .search-container {
       max-width: 600px;
-      margin: 0 auto;
+      margin: 40px auto 0;
+      position: relative;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 24px 16px 50px;
+      border: 2px solid var(--border);
+      border-radius: 50px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 16px;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: var(--text-light);
+    }
+
+    /* 分类标签 */
+    .category-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 50px 0 30px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 24px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+      background: var(--gradient-1);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
 
     /* 工具卡片网格 */
     .tools-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 28px;
+      margin-top: 30px;
     }
 
     .tool-card {
       background: var(--card);
-      border-radius: 16px;
-      padding: 28px 24px;
-      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      border: 2px solid var(--border);
       box-shadow: var(--shadow);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
       color: inherit;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-1);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .tool-card:hover::before {
+      transform: scaleX(1);
     }
 
     .tool-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+      border-color: var(--primary);
     }
 
     .tool-icon {
-      font-size: 32px;
+      font-size: 40px;
       margin-bottom: 8px;
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+
+    .tool-card:hover .tool-icon {
+      transform: scale(1.15) rotate(5deg);
     }
 
     .tool-title {
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .tool-desc {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-light);
-      line-height: 1.5;
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .tool-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tool-tag {
+      padding: 4px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
     }
 
     .tool-link {
       margin-top: auto;
-      padding-top: 12px;
-      font-size: 14px;
+      padding-top: 16px;
+      font-size: 15px;
       color: var(--primary);
-      font-weight: 500;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.3s;
     }
 
-    /* 分类标题 */
-    .section-title {
-      font-size: 22px;
-      font-weight: 600;
-      margin: 50px 0 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+    .tool-card:hover .tool-link {
+      gap: 12px;
+    }
+
+    /* 特色功能区 */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin: 60px 0;
+    }
+
+    .feature-card {
+      background: var(--card);
+      padding: 32px 24px;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.6;
     }
 
     /* 页脚 */
     footer {
-      margin-top: 80px;
-      text-align: center;
-      font-size: 14px;
+      margin-top: 100px;
+      background: var(--card);
+      border-top: 2px solid var(--border);
+      padding: 40px 0 30px;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+
+    .footer-section h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section li {
+      margin-bottom: 10px;
+    }
+
+    .footer-section a {
       color: var(--text-light);
-      padding: 20px 0;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .footer-section a:hover {
+      color: var(--primary);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 30px;
       border-top: 1px solid var(--border);
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .social-link {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 20px;
+      transition: all 0.3s;
+      border: 2px solid var(--border);
+    }
+
+    .social-link:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-3px);
+      border-color: var(--primary);
+    }
+
+    /* 回到顶部按钮 */
+    #backToTop {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--gradient-1);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 99;
+    }
+
+    #backToTop.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #backToTop:hover {
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
     }
 
     /* 响应式 */
     @media (max-width: 768px) {
       .hero h1 {
-        font-size: 28px;
+        font-size: 32px;
+      }
+      .hero p {
+        font-size: 16px;
+      }
+      .hero-stats {
+        gap: 24px;
+      }
+      .stat-number {
+        font-size: 24px;
       }
       .tools-grid {
         grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .nav-right {
+        gap: 12px;
+      }
+      .github-link span {
+        display: none;
       }
     }
+
     @media (max-width: 480px) {
       .tools-grid {
         grid-template-columns: 1fr;
+      }
+      .category-tabs {
+        gap: 8px;
+      }
+      .tab-btn {
+        padding: 8px 16px;
+        font-size: 14px;
       }
     }
   </style>
@@ -209,89 +581,244 @@
       <nav>
         <div class="logo">🧰 我的在线工具</div>
         <div class="nav-right">
+          <a href="https://github.com/你的用户名/你的仓库" target="_blank" class="github-link">
+            <span>⭐ Star on GitHub</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </a>
           <button id="themeToggle">🌙</button>
         </div>
       </nav>
     </div>
   </header>
 
-  <!-- 头部简介 -->
+  <!-- Hero 区域 -->
   <section class="hero">
     <div class="container">
       <h1>实用网页小工具集合</h1>
       <p>基于纯 HTML / CSS / JS 编写，无需安装，打开即用，全部开源免费</p>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="toolCount">6+</span>
+          <div class="stat-label">实用工具</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">100%</span>
+          <div class="stat-label">免费开源</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">0</span>
+          <div class="stat-label">广告干扰</div>
+        </div>
+      </div>
+
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索工具...">
+      </div>
     </div>
   </section>
 
   <div class="container">
+    <!-- 分类标签 -->
+    <div class="category-tabs">
+      <button class="tab-btn active" data-category="all">全部工具</button>
+      <button class="tab-btn" data-category="common">常用工具</button>
+      <button class="tab-btn" data-category="dev">开发辅助</button>
+      <button class="tab-btn" data-category="data">数据处理</button>
+    </div>
+
     <!-- 常用工具 -->
-    <h2 class="section-title">常用工具</h2>
-    <div class="tools-grid">
+    <div class="tools-grid" id="toolsContainer">
       <!-- 工具1 -->
-      <a class="tool-card" href="tools/calculator.html" target="_blank">
+      <a class="tool-card" href="tools/calculator.html" target="_blank" data-category="common">
         <div class="tool-icon">🧮</div>
         <div class="tool-title">科学计算器</div>
         <div class="tool-desc">支持加减乘除、平方、开方、括号运算，日常计算快速使用</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">数学</span>
+          <span class="tool-tag">计算</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
 
       <!-- 工具2 -->
-      <a class="tool-card" href="tools/converter.html" target="_blank">
+      <a class="tool-card" href="tools/converter.html" target="_blank" data-category="common">
         <div class="tool-icon">📏</div>
         <div class="tool-title">单位换算器</div>
         <div class="tool-desc">长度、重量、温度、时间、速度等常用单位一键转换</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">转换</span>
+          <span class="tool-tag">日常</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
 
       <!-- 工具3 -->
-      <a class="tool-card" href="tools/qrcode.html" target="_blank">
+      <a class="tool-card" href="tools/qrcode.html" target="_blank" data-category="common">
         <div class="tool-icon">🔳</div>
         <div class="tool-title">二维码生成</div>
         <div class="tool-desc">输入文本、链接，一键生成可下载的二维码图片</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">二维码</span>
+          <span class="tool-tag">生成</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
 
       <!-- 工具4 -->
-      <a class="tool-card" href="tools/timer.html" target="_blank">
+      <a class="tool-card" href="tools/timer.html" target="_blank" data-category="common">
         <div class="tool-icon">⏱️</div>
         <div class="tool-title">倒计时工具</div>
         <div class="tool-desc">学习、工作专注计时，支持自定义时间与提醒</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">时间</span>
+          <span class="tool-tag">效率</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
-    </div>
 
-    <!-- 开发工具 -->
-    <h2 class="section-title">开发辅助</h2>
-    <div class="tools-grid">
-      <a class="tool-card" href="tools/json.html" target="_blank">
-        <div class="tool-icon>📄</div>
+      <!-- 工具5 -->
+      <a class="tool-card" href="tools/json.html" target="_blank" data-category="dev">
+        <div class="tool-icon">📄</div>
         <div class="tool-title">JSON格式化</div>
         <div class="tool-desc">格式化、压缩、校验JSON代码，方便调试接口</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">开发</span>
+          <span class="tool-tag">JSON</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
 
-      <a class="tool-card" href="tools/timestamp.html" target="_blank">
+      <!-- 工具6 -->
+      <a class="tool-card" href="tools/timestamp.html" target="_blank" data-category="dev">
         <div class="tool-icon">⏰</div>
         <div class="tool-title">时间戳转换</div>
         <div class="tool-desc">Unix时间戳与日期时间互转，开发者常用工具</div>
-        <div class="tool-link">打开使用 →</div>
+        <div class="tool-tags">
+          <span class="tool-tag">开发</span>
+          <span class="tool-tag">时间</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
       </a>
+
+      <!-- 工具7 -->
+      <a class="tool-card" href="tools/今日工资.html" target="_blank" data-category="data">
+        <div class="tool-icon">💰</div>
+        <div class="tool-title">今日工资计算器</div>
+        <div class="tool-desc">计算每日收入，实时显示今日收益，激励工作</div>
+        <div class="tool-tags">
+          <span class="tool-tag">财务</span>
+          <span class="tool-tag">计算</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
+      </a>
+
+      <!-- 工具8 -->
+      <a class="tool-card" href="tools/循环离群点处理修正.html" target="_blank" data-category="data">
+        <div class="tool-icon">📊</div>
+        <div class="tool-title">数据离群点处理</div>
+        <div class="tool-desc">循环数据中的离群点检测与修正，数据分析利器</div>
+        <div class="tool-tags">
+          <span class="tool-tag">数据分析</span>
+          <span class="tool-tag">统计</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
+      </a>
+
+      <!-- 工具9 -->
+      <a class="tool-card" href="tools/314Ah_LFP_Gr_化成终压分析_真实数据版.html" target="_blank" data-category="data">
+        <div class="tool-icon">🔋</div>
+        <div class="tool-title">电池化成终压分析</div>
+        <div class="tool-desc">314Ah LFP电池化成终压数据分析工具，真实数据处理</div>
+        <div class="tool-tags">
+          <span class="tool-tag">电池</span>
+          <span class="tool-tag">分析</span>
+        </div>
+        <div class="tool-link">立即使用 →</div>
+      </a>
+    </div>
+
+    <!-- 特色功能 -->
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">极速加载</div>
+        <div class="feature-desc">纯静态页面，秒级加载，无需等待</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">隐私保护</div>
+        <div class="feature-desc">所有计算在本地完成，数据不上传</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">响应式设计</div>
+        <div class="feature-desc">完美适配手机、平板、电脑各种设备</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">深色模式</div>
+        <div class="feature-desc">支持明暗主题切换，保护视力</div>
+      </div>
     </div>
   </div>
 
   <!-- 页脚 -->
   <footer>
     <div class="container">
-      <p>© 2026 我的工具集 | 托管于 GitHub Pages | 纯静态网页工具</p>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>关于</h3>
+          <ul>
+            <li><a href="#">项目介绍</a></li>
+            <li><a href="#">使用说明</a></li>
+            <li><a href="#">更新日志</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>工具分类</h3>
+          <ul>
+            <li><a href="#" onclick="filterTools('common')">常用工具</a></li>
+            <li><a href="#" onclick="filterTools('dev')">开发辅助</a></li>
+            <li><a href="#" onclick="filterTools('data')">数据处理</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>支持</h3>
+          <ul>
+            <li><a href="#">反馈问题</a></li>
+            <li><a href="#">建议新功能</a></li>
+            <li><a href="#">联系作者</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>关注我们</h3>
+          <div class="social-links">
+            <a href="#" class="social-link" title="GitHub">📦</a>
+            <a href="#" class="social-link" title="Twitter">🐦</a>
+            <a href="#" class="social-link" title="Email">📧</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 我的工具集 | 托管于 GitHub Pages | 纯静态网页工具</p>
+        <p style="margin-top: 8px; font-size: 12px;">Made with ❤️ by Developer</p>
+      </div>
     </div>
   </footer>
 
-  <!-- 主题切换 -->
+  <!-- 回到顶部按钮 -->
+  <button id="backToTop">↑</button>
+
+  <!-- JavaScript -->
   <script>
+    // 主题切换
     const toggle = document.getElementById('themeToggle');
     const body = document.body;
 
-    // 读取本地存储主题
     if (localStorage.getItem('theme') === 'dark') {
       body.setAttribute('data-theme', 'dark');
       toggle.textContent = '☀️';
@@ -307,6 +834,94 @@
         localStorage.setItem('theme', 'dark');
         toggle.textContent = '☀️';
       }
+    });
+
+    // 工具搜索功能
+    const searchInput = document.getElementById('searchInput');
+    const toolCards = document.querySelectorAll('.tool-card');
+
+    searchInput.addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      toolCards.forEach(card => {
+        const title = card.querySelector('.tool-title').textContent.toLowerCase();
+        const desc = card.querySelector('.tool-desc').textContent.toLowerCase();
+        const tags = Array.from(card.querySelectorAll('.tool-tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+
+        if (title.includes(keyword) || desc.includes(keyword) || tags.includes(keyword)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // 分类筛选功能
+    const tabBtns = document.querySelectorAll('.tab-btn');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // 更新激活状态
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const category = btn.dataset.category;
+        filterTools(category);
+      });
+    });
+
+    function filterTools(category) {
+      toolCards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.style.display = 'flex';
+          // 添加淡入动画
+          card.style.animation = 'fadeInUp 0.5s ease-out';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // 回到顶部按钮
+    const backToTopBtn = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+
+    // 动态统计工具数量
+    document.getElementById('toolCount').textContent = toolCards.length + '+';
+
+    // 卡片进入视口动画
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    toolCards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.5s, transform 0.5s';
+      observer.observe(card);
     });
   </script>
 </body>

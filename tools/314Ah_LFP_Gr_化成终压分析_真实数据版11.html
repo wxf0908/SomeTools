@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>314Ah LFP-Gr 电池化成终压分析 | 真实分容数据 | 1%分辨率</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 修复1：更换稳定的MathJax CDN，彻底解决公式渲染错误 -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { 
+            padding: 20px; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+        }
+        .formula { 
+            font-size: 1.1rem; 
+            padding: 8px 0; 
+            margin: 10px 0;
+        }
+        .param-card { 
+            margin-bottom: 16px; 
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+        .chart-container { 
+            position: relative; 
+            height: 400px; 
+            margin: 20px 0; 
+        }
+        .cell-input { 
+            margin-bottom: 12px; 
+            padding: 12px; 
+            border: 1px solid #eee; 
+            border-radius: 8px; 
+            background-color: #f8f9fa;
+        }
+        .text-important { 
+            color: #dc3545; 
+            font-weight: bold;
+        }
+        .section-title {
+            border-left: 4px solid #0d6efd;
+            padding-left: 10px;
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .hint-box {
+            background-color: #e7f5ff;
+            border-left: 4px solid #0d6efd;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .assumption-item {
+            margin: 8px 0;
+            padding-left: 10px;
+            border-left: 2px solid #28a745;
+        }
+        .principle-item {
+            margin: 12px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-center mb-4 text-primary">314Ah LFP-Gr 磷酸铁锂电池化成终压差异分析</h1>
+    <p class="text-center text-muted">基于真实分容核容数据（1%分辨率SOC-OCV曲线）| 多参数自定义分析</p>
+    <p class="text-center text-muted">数据来源：314Ah分容核容05P曲线.xlsx | Sheet1</p>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white fw-bold">📊 研究背景与数据说明</div>
+        <div class="card-body">
+            <div class="hint-box">
+                <strong>数据特征：</strong> 314Ah LFP-Gr 方形磷酸铁锂电池，分容测试获取的SOC-OCV原始数据，共77,905个数据点，处理后得到1%分辨率（0~100% SOC）的标准曲线。
+            </div>
+            <div class="hint-box">
+                <strong>电压范围：</strong> 2.8936V（0% SOC）~ 3.6497V（100% SOC），符合LFP电池典型电压特性。
+            </div>
+            <div class="hint-box">
+                <strong>分析目标：</strong> 固定化成充电容量条件下，本征容量差异导致的SEI耗锂不同对化成终压的影响规律。
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white fw-bold">🔬 电化学原理与研究假设</div>
+        <div class="card-body">
+            <h5 class="section-title">一、核心电化学原理</h5>
+            <div class="principle-item">
+                <h6 class="fw-bold text-primary">1. SEI膜形成机理</h6>
+                <p>化成过程中，负极石墨表面发生电解液还原反应，生成稳定的固体电解质界面膜（SEI膜），该过程不可逆消耗锂离子和电解液，导致一部分充电容量无法用于活性物质嵌锂。</p>
+            </div>
+            <div class="principle-item">
+                <h6 class="fw-bold text-primary">2. OCV-SOC关系本质</h6>
+                <p>开路电压（OCV）由正负极平衡电位差决定：$$OCV = \varphi_+ - \varphi_-$$</p>
+            </div>
+            <div class="principle-item">
+                <h6 class="fw-bold text-primary">3. 温度对OCV的影响</h6>
+                <p>基于热力学能斯特方程，LFP-Gr体系温度系数约为-0.2mV/℃。</p>
+            </div>
+            <h5 class="section-title">二、研究假设条件</h5>
+            <div class="assumption-item"><strong>假设1：体系一致性</strong></div>
+            <div class="assumption-item"><strong>假设2：SOC-OCV曲线一致性</strong></div>
+            <div class="assumption-item"><strong>假设3：SEI耗锂比例恒定</strong></div>
+            <div class="assumption-item"><strong>假设4：无极化影响</strong></div>
+            <div class="assumption-item"><strong>假设5：温度均匀性</strong></div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white fw-bold">📐 核心计算公式</div>
+        <div class="card-body">
+            <div class="formula">1. SEI消耗容量：$$Q_{SEI} = C_0 \times \frac{k}{100}$$</div>
+            <div class="formula">2. 有效嵌锂容量：$$Q_{eff} = Q_{charge} - Q_{SEI}$$</div>
+            <div class="formula">3. 化成结束SOC：$$SOC = \frac{Q_{eff}}{C_0} \times 100\%$$</div>
+            <div class="formula">4. 温度修正OCV：$$OCV(T) = OCV(SOC) + \frac{dOCV}{dT} \times (T - T_{ref})$$</div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white fw-bold">📋 行业标准常量与参考值</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>参数名称</th><th>符号</th><th>标准参考值</th><th>取值范围</th><th>单位</th><th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="text-center"><td>电压温度系数</td><td>dOCV/dT</td><td>-0.2</td><td>-0.1~-0.3</td><td>mV/℃</td><td>LFP-Gr通用值</td></tr>
+                        <tr class="text-center"><td>参考温度</td><td>Tref</td><td>25</td><td>20~25</td><td>℃</td><td>标准测试温度</td></tr>
+                        <tr class="text-center"><td>SEI耗锂比例</td><td>k</td><td>10</td><td>6~14</td><td>%</td><td>化成工艺相关</td></tr>
+                        <tr class="text-center"><td>标称容量</td><td>Cnom</td><td>314</td><td>300~320</td><td>Ah</td><td>设计容量</td></tr>
+                        <tr class="text-center"><td>化成截止电压</td><td>Vcharge</td><td>3.65</td><td>3.6~3.7</td><td>V</td><td>常规值</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card param-card">
+        <div class="card-header bg-warning text-dark fw-bold">⚙️ 多电芯参数自定义面板</div>
+        <div class="card-body">
+            <div id="cellsContainer">
+                <div class="cell-input">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto"><span class="fw-bold">电芯 #1</span></div>
+                        <div class="col-auto"><label class="form-label">本征容量 C₀</label><input type="number" class="form-control form-control-sm c0" value="314000"></div>
+                        <div class="col-auto"><label class="form-label">化成容量</label><input type="number" class="form-control form-control-sm qcharge" value="50000"></div>
+                        <div class="col-auto"><label class="form-label">SEI耗锂</label><input type="number" class="form-control form-control-sm sei" value="10"></div>
+                        <div class="col-auto"><label class="form-label">测试温度</label><input type="number" class="form-control form-control-sm temp" value="25"></div>
+                        <div class="col-auto"><button class="btn btn-danger btn-sm remove-cell">删除电芯</button></div>
+                    </div>
+                </div>
+            </div>
+            <button id="addCell" class="btn btn-primary btn-sm mt-3">添加对比电芯</button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white fw-bold">📊 实时计算结果</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center">
+                    <thead><tr><th>电芯编号</th><th>本征容量</th><th>化成容量</th><th>SEI比例</th><th>SEI容量</th><th>有效容量</th><th>结束SOC</th><th>温度</th><th>基准OCV</th><th>修正终压</th></tr></thead>
+                    <tbody id="resultTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white fw-bold">📈 SOC-OCV 标准曲线</div>
+                <div class="card-body"><div class="chart-container"><canvas id="highResChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white fw-bold">📊 多电芯终压对比</div>
+                <div class="card-body"><div class="chart-container"><canvas id="voltageChart"></canvas></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONSTANTS = {
+            // 修复2：修正原始SOC数据，删除重复值，保证0-100连续，解决横坐标错位
+            SOC_LIST: Array.from({length: 101}, (_, i) => i),
+            OCV_LIST: [2.8936,3.0403,3.1164,3.1718,3.215,3.2499,3.2748,3.2822,3.2856,3.2888,3.2925,3.2965,3.3014,3.3069,3.3129,3.3189,3.3251,3.3308,3.3357,3.3403,3.3448,3.3492,3.3534,3.3574,3.3604,3.3634,3.3655,3.3674,3.3689,3.3701,3.3708,3.3714,3.372,3.3723,3.3728,3.3731,3.3735,3.374,3.3743,3.3749,3.3754,3.376,3.3763,3.3771,3.3777,3.3783,3.3791,3.38,3.3808,3.3815,3.3826,3.3835,3.3848,3.3861,3.3875,3.3891,3.3909,3.3929,3.395,3.3977,3.4,3.402,3.4037,3.4049,3.4061,3.4069,3.4077,3.4086,3.4094,3.41,3.4106,3.411,3.412,3.4126,3.4134,3.414,3.4147,3.4155,3.4166,3.4172,3.4181,3.4192,3.4203,3.4214,3.4226,3.424,3.4254,3.4272,3.4287,3.4307,3.4329,3.4354,3.4383,3.4415,3.4456,3.4507,3.458,3.4681,3.4855,3.521,3.6497],
+            TEMP_COEFFICIENT: -0.0002, REF_TEMP:25,
+            COLORS: ['#dc3545','#0d6efd','#28a745','#ffc107','#17a2b8'],
+            INPUT_DEFAULTS: {C0:314000,QCHARGE:50000,SEI:10,TEMP:25},
+            INPUT_RANGES: {C0:{min:100000,max:400000},QCHARGE:{min:10000,max:100000},SEI:{min:6,max:14},TEMP:{min:-20,max:60}}
+        };
+
+        const appState = {charts:{highResChart:null,voltageChart:null},domElements:{}};
+
+        function formatNumber(num, precision=4) {return isNaN(num)||!isFinite(num)?0:parseFloat(num.toFixed(precision));}
+        function validateInput(value, type) {const {min,max}=CONSTANTS.INPUT_RANGES[type];const num=parseFloat(value);return Math.max(min,Math.min(max,isNaN(num)?CONSTANTS.INPUT_DEFAULTS[type]:num));}
+        function getOCVBySOC(soc) {if(soc<=0)return CONSTANTS.OCV_LIST[0];if(soc>=100)return CONSTANTS.OCV_LIST[100];const f=Math.floor(soc);return CONSTANTS.OCV_LIST[f]+(CONSTANTS.OCV_LIST[f+1]-CONSTANTS.OCV_LIST[f])*(soc-f);}
+
+        function initCharts() {
+            // 修复2：X轴设置为线性轴linear，彻底解决化成终点横坐标错位
+            const ctx1 = document.getElementById('highResChart').getContext('2d');
+            appState.charts.highResChart = new Chart(ctx1, {
+                type:'line', data:{labels:CONSTANTS.SOC_LIST,datasets:[{label:'SOC-OCV曲线',data:CONSTANTS.OCV_LIST,borderColor:'#0d6efd',borderWidth:3,pointRadius:0},{label:'终压点',data:[],type:'scatter',backgroundColor:[],pointRadius:6}]},
+                options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'linear',min:0,max:100,title:{display:true,text:'SOC (%)'}},y:{min:2.8,max:3.8,title:{display:true,text:'OCV (V)'}}}}
+            });
+
+            // 修复3：设置柱状图宽度，解决过宽问题
+            const ctx2 = document.getElementById('voltageChart').getContext('2d');
+            appState.charts.voltageChart = new Chart(ctx2, {
+                type:'bar', data:{labels:[],datasets:[{label:'终压(V)',data:[],backgroundColor:[],borderWidth:1}]},
+                options:{responsive:true,maintainAspectRatio:false,
+                    scales:{y:{min:3.2,max:3.5}},
+                    // 核心：缩窄柱子宽度
+                    barPercentage:0.5, categoryPercentage:0.6
+                }
+            });
+        }
+
+        function updateCharts(chartData) {
+            const {highResChart,voltageChart}=appState.charts;
+            highResChart.data.datasets[1].data = chartData.map(i=>({x:i.soc,y:i.voltage}));
+            highResChart.data.datasets[1].backgroundColor = chartData.map(i=>i.color);
+            highResChart.update('none');
+
+            voltageChart.data.labels = chartData.map(i=>i.name);
+            voltageChart.data.datasets[0].data = chartData.map(i=>i.voltage);
+            voltageChart.data.datasets[0].backgroundColor = chartData.map(i=>i.color);
+            voltageChart.update('none');
+        }
+
+        function calculateCell(cellEl, index) {
+            const c0=validateInput(cellEl.querySelector('.c0').value,'C0');
+            const qcharge=validateInput(cellEl.querySelector('.qcharge').value,'QCHARGE');
+            const sei=validateInput(cellEl.querySelector('.sei').value,'SEI');
+            const temp=validateInput(cellEl.querySelector('.temp').value,'TEMP');
+            const q_sei=formatNumber(c0*sei/100);
+            const q_eff=formatNumber(Math.max(0,qcharge-q_sei));
+            const soc=c0>0?formatNumber(q_eff/c0*100):0;
+            const ocv_base=getOCVBySOC(soc);
+            const voltage=formatNumber(ocv_base+CONSTANTS.TEMP_COEFFICIENT*(temp-CONSTANTS.REF_TEMP));
+            return {name:`电芯${index+1}`,c0,qcharge,sei,q_sei,q_eff,soc,temp,ocv_base,voltage,color:CONSTANTS.COLORS[index%CONSTANTS.COLORS.length]};
+        }
+
+        function calculateAll() {
+            const cells=Array.from(appState.domElements.cellsContainer.querySelectorAll('.cell-input'));
+            const data=[], table=appState.domElements.resultTable;
+            table.innerHTML='';
+            cells.forEach((el,i)=>{
+                const res=calculateCell(el,i); data.push(res);
+                table.innerHTML+=`<tr><td>${i+1}</td><td>${res.c0}</td><td>${res.qcharge}</td><td>${res.sei}%</td><td>${res.q_sei}</td><td>${res.q_eff}</td><td>${res.soc}%</td><td>${res.temp}℃</td><td>${res.ocv_base}V</td><td class="fw-bold" style="color:${res.color}">${res.voltage}V</td></tr>`;
+            });
+            updateCharts(data);
+        }
+
+        document.addEventListener('DOMContentLoaded',()=>{
+            appState.domElements.cellsContainer=document.getElementById('cellsContainer');
+            appState.domElements.resultTable=document.getElementById('resultTable');
+            appState.domElements.addCell=document.getElementById('addCell');
+            
+            initCharts();
+            // 事件绑定
+            appState.domElements.cellsContainer.addEventListener('input',(e)=>{if(['c0','qcharge','sei','temp'].some(c=>e.target.classList.contains(c))){calculateAll();}});
+            appState.domElements.cellsContainer.addEventListener('click',(e)=>{if(e.target.classList.contains('remove-cell')&&document.querySelectorAll('.cell-input').length>1){e.target.closest('.cell-input').remove();calculateAll();}});
+            appState.domElements.addCell.addEventListener('click',()=>{
+                const idx=document.querySelectorAll('.cell-input').length+1;
+                appState.domElements.cellsContainer.insertAdjacentHTML('beforeend',`
+                <div class="cell-input"><div class="row g-3 align-items-center">
+                    <div class="col-auto"><span class="fw-bold">电芯 #${idx}</span></div>
+                    <div class="col-auto"><input type="number" class="form-control form-control-sm c0" value="${314000+idx*10000}"></div>
+                    <div class="col-auto"><input type="number" class="form-control form-control-sm qcharge" value="50000"></div>
+                    <div class="col-auto"><input type="number" class="form-control form-control-sm sei" value="10"></div>
+                    <div class="col-auto"><input type="number" class="form-control form-control-sm temp" value="25"></div>
+                    <div class="col-auto"><button class="btn btn-danger btn-sm remove-cell">删除</button></div>
+                </div></div>`);
+                calculateAll();
+            });
+            calculateAll();
+        });
+    </script>
+</body>
+</html>
