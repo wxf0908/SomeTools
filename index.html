@@ -27,6 +27,7 @@
       --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --highlight: #fef08a;
     }
 
     [data-theme="dark"] {
@@ -540,7 +541,7 @@
 
     /* 搜索高亮 */
     .search-highlight {
-      background: rgba(255, 235, 59, 0.3);
+      background: var(--highlight);
       padding: 2px 4px;
       border-radius: 3px;
     }
@@ -548,6 +549,124 @@
     /* 无结果提示 */
     #noResults {
       grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    #noResults .no-results-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    #noResults h3 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    #noResults p {
+      color: var(--text-light);
+      font-size: 16px;
+    }
+
+    /* 骨架屏 */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--card) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-card {
+      border-radius: 20px;
+      padding: 32px 28px;
+      background: var(--card);
+      border: 2px solid var(--border);
+    }
+
+    .skeleton-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .skeleton-title {
+      height: 24px;
+      width: 60%;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .skeleton-desc {
+      height: 16px;
+      width: 100%;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .skeleton-desc:last-child {
+      width: 70%;
+    }
+
+    /* 快捷键提示 */
+    .keyboard-hint {
+      position: fixed;
+      bottom: 100px;
+      left: 20px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      z-index: 100;
+    }
+
+    .keyboard-hint.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .keyboard-hint h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .keyboard-hint-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .keyboard-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+      padding: 0 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     /* 响应式 */
@@ -668,7 +787,35 @@
       <button class="tab-btn" data-category="data">数据处理</button>
     </div>
 
-    <!-- 常用工具 -->
+    <!-- 骨架屏加载 -->
+    <div class="tools-grid skeleton-container" id="skeletonContainer" style="display: none;">
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-desc"></div>
+        <div class="skeleton skeleton-desc"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-desc"></div>
+        <div class="skeleton skeleton-desc"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-desc"></div>
+        <div class="skeleton skeleton-desc"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-desc"></div>
+        <div class="skeleton skeleton-desc"></div>
+      </div>
+    </div>
+
+    <!-- 工具卡片网格 -->
     <div class="tools-grid" id="toolsContainer">
       <!-- 工具1 -->
       <a class="tool-card" href="tools/calculator.html" target="_blank" data-category="common">
@@ -777,6 +924,13 @@
         </div>
         <div class="tool-link">立即使用 →</div>
       </a>
+
+      <!-- 无结果提示 -->
+      <div id="noResults" style="display: none;">
+        <div class="no-results-icon">🔍</div>
+        <h3>未找到相关工具</h3>
+        <p>试试其他关键词或选择其他分类</p>
+      </div>
     </div>
 
     <!-- 特色功能 -->
@@ -848,15 +1002,50 @@
     </div>
   </footer>
 
+  <!-- 键盘快捷键提示 -->
+  <div class="keyboard-hint" id="keyboardHint">
+    <h4>⌨️ 快捷键</h4>
+    <div class="keyboard-hint-item">
+      <span class="keyboard-key">/</span>
+      <span>聚焦搜索框</span>
+    </div>
+    <div class="keyboard-hint-item">
+      <span class="keyboard-key">Esc</span>
+      <span>清除搜索/关闭弹窗</span>
+    </div>
+    <div class="keyboard-hint-item">
+      <span class="keyboard-key">T</span>
+      <span>切换主题</span>
+    </div>
+  </div>
+
   <!-- 回到顶部按钮 -->
   <button id="backToTop">↑</button>
 
   <!-- JavaScript -->
   <script>
-    // 主题切换
+    // DOM元素
     const toggle = document.getElementById('themeToggle');
     const body = document.body;
+    const searchInput = document.getElementById('searchInput');
+    const toolCards = document.querySelectorAll('.tool-card');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const backToTopBtn = document.getElementById('backToTop');
+    const noResults = document.getElementById('noResults');
+    const skeletonContainer = document.getElementById('skeletonContainer');
+    const keyboardHint = document.getElementById('keyboardHint');
 
+    // 骨架屏加载
+    document.addEventListener('DOMContentLoaded', () => {
+      skeletonContainer.style.display = 'grid';
+      setTimeout(() => {
+        skeletonContainer.style.display = 'none';
+        // 动态统计工具数量
+        document.getElementById('toolCount').textContent = toolCards.length + '+';
+      }, 800);
+    });
+
+    // 主题切换
     if (localStorage.getItem('theme') === 'dark') {
       body.setAttribute('data-theme', 'dark');
       toggle.textContent = '☀️';
@@ -874,34 +1063,50 @@
       }
     });
 
-    // 工具搜索功能
-    const searchInput = document.getElementById('searchInput');
-    const toolCards = document.querySelectorAll('.tool-card');
+    // 高亮匹配文本
+    function highlightText(element, keyword) {
+      if (!keyword) {
+        element.innerHTML = element.textContent;
+        return;
+      }
+      const text = element.textContent;
+      const regex = new RegExp(`(${keyword})`, 'gi');
+      element.innerHTML = text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
 
+    // 工具搜索功能
     searchInput.addEventListener('input', (e) => {
-      const keyword = e.target.value.toLowerCase();
+      const keyword = e.target.value.toLowerCase().trim();
+      let visibleCount = 0;
+
       toolCards.forEach(card => {
-        const title = card.querySelector('.tool-title').textContent.toLowerCase();
-        const desc = card.querySelector('.tool-desc').textContent.toLowerCase();
+        const titleEl = card.querySelector('.tool-title');
+        const descEl = card.querySelector('.tool-desc');
+        const title = titleEl.textContent.toLowerCase();
+        const desc = descEl.textContent.toLowerCase();
         const tags = Array.from(card.querySelectorAll('.tool-tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
 
-        if (title.includes(keyword) || desc.includes(keyword) || tags.includes(keyword)) {
+        if (keyword === '' || title.includes(keyword) || desc.includes(keyword) || tags.includes(keyword)) {
           card.style.display = 'flex';
+          highlightText(titleEl, keyword);
+          highlightText(descEl, keyword);
+          visibleCount++;
         } else {
           card.style.display = 'none';
+          highlightText(titleEl, '');
+          highlightText(descEl, '');
         }
       });
+
+      // 显示/隐藏无结果提示
+      noResults.style.display = (visibleCount === 0 && keyword !== '') ? 'block' : 'none';
     });
 
     // 分类筛选功能
-    const tabBtns = document.querySelectorAll('.tab-btn');
-
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        // 更新激活状态
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
         const category = btn.dataset.category;
         filterTools(category);
       });
@@ -911,41 +1116,32 @@
       toolCards.forEach(card => {
         if (category === 'all' || card.dataset.category === category) {
           card.style.display = 'flex';
-          // 添加淡入动画
           card.style.animation = 'fadeInUp 0.5s ease-out';
         } else {
           card.style.display = 'none';
         }
       });
+      // 重置搜索
+      searchInput.value = '';
+      toolCards.forEach(card => {
+        highlightText(card.querySelector('.tool-title'), '');
+        highlightText(card.querySelector('.tool-desc'), '');
+      });
+      noResults.style.display = 'none';
     }
 
     // 回到顶部按钮
-    const backToTopBtn = document.getElementById('backToTop');
-
     window.addEventListener('scroll', () => {
-      if (window.pageYOffset > 300) {
-        backToTopBtn.classList.add('visible');
-      } else {
-        backToTopBtn.classList.remove('visible');
-      }
+      backToTopBtn.classList.toggle('visible', window.pageYOffset > 300);
+      keyboardHint.classList.toggle('visible', window.pageYOffset > 500);
     });
 
     backToTopBtn.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // 动态统计工具数量
-    document.getElementById('toolCount').textContent = toolCards.length + '+';
-
     // 卡片进入视口动画
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -960,6 +1156,47 @@
       card.style.transform = 'translateY(20px)';
       card.style.transition = 'opacity 0.5s, transform 0.5s';
       observer.observe(card);
+    });
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      // 聚焦搜索框
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      // 清除搜索
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchInput.blur();
+        toolCards.forEach(card => {
+          card.style.display = 'flex';
+          highlightText(card.querySelector('.tool-title'), '');
+          highlightText(card.querySelector('.tool-desc'), '');
+        });
+        noResults.style.display = 'none';
+      }
+      // 切换主题
+      if (e.key === 't' || e.key === 'T') {
+        if (document.activeElement !== searchInput) {
+          toggle.click();
+        }
+      }
+    });
+
+    // 搜索框聚焦时显示提示
+    searchInput.addEventListener('focus', () => {
+      keyboardHint.classList.remove('visible');
+    });
+
+    searchInput.addEventListener('blur', () => {
+      if (window.pageYOffset > 500) {
+        setTimeout(() => {
+          if (document.activeElement !== searchInput) {
+            keyboardHint.classList.add('visible');
+          }
+        }, 300);
+      }
     });
   </script>
 </body>
