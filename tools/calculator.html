@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>科学计算器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .calculator {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .display {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: right;
+    }
+
+    .previous-operand {
+      color: #6c757d;
+      font-size: 16px;
+      min-height: 24px;
+      word-wrap: break-word;
+    }
+
+    .current-operand {
+      color: #212529;
+      font-size: 32px;
+      font-weight: bold;
+      word-wrap: break-word;
+      margin-top: 8px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      padding: 18px;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: #f8f9fa;
+      color: #212529;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background: #e9ecef;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-operator {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-operator:hover {
+      background: #5568d3;
+    }
+
+    .btn-equals {
+      background: #764ba2;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .btn-equals:hover {
+      background: #6a3f91;
+    }
+
+    .btn-clear {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background: #c82333;
+    }
+
+    .btn-function {
+      background: #ffc107;
+      color: #212529;
+    }
+
+    .btn-function:hover {
+      background: #e0a800;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px 24px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 480px) {
+      .calculator {
+        padding: 20px;
+      }
+      
+      button {
+        padding: 15px;
+        font-size: 18px;
+      }
+      
+      .current-operand {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="history.back()">← 返回首页</button>
+  
+  <div class="calculator">
+    <h1>🧮 科学计算器</h1>
+    <div class="display">
+      <div class="previous-operand" id="previousOperand"></div>
+      <div class="current-operand" id="currentOperand">0</div>
+    </div>
+    <div class="buttons">
+      <button class="btn-clear" onclick="clearAll()">AC</button>
+      <button class="btn-function" onclick="deleteLast()">DEL</button>
+      <button class="btn-function" onclick="appendFunction('sqrt')">√</button>
+      <button class="btn-operator" onclick="chooseOperation('/')">÷</button>
+      
+      <button onclick="appendNumber('7')">7</button>
+      <button onclick="appendNumber('8')">8</button>
+      <button onclick="appendNumber('9')">9</button>
+      <button class="btn-operator" onclick="chooseOperation('*')">×</button>
+      
+      <button onclick="appendNumber('4')">4</button>
+      <button onclick="appendNumber('5')">5</button>
+      <button onclick="appendNumber('6')">6</button>
+      <button class="btn-operator" onclick="chooseOperation('-')">-</button>
+      
+      <button onclick="appendNumber('1')">1</button>
+      <button onclick="appendNumber('2')">2</button>
+      <button onclick="appendNumber('3')">3</button>
+      <button class="btn-operator" onclick="chooseOperation('+')">+</button>
+      
+      <button onclick="appendNumber('0')">0</button>
+      <button onclick="appendNumber('.')">.</button>
+      <button class="btn-function" onclick="appendFunction('square')">x²</button>
+      <button class="btn-equals" onclick="compute()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let currentOperand = '0';
+    let previousOperand = '';
+    let operation = undefined;
+
+    const currentOperandElement = document.getElementById('currentOperand');
+    const previousOperandElement = document.getElementById('previousOperand');
+
+    function updateDisplay() {
+      currentOperandElement.textContent = currentOperand;
+      if (operation != null) {
+        previousOperandElement.textContent = `${previousOperand} ${operation}`;
+      } else {
+        previousOperandElement.textContent = previousOperand;
+      }
+    }
+
+    function appendNumber(number) {
+      if (number === '.' && currentOperand.includes('.')) return;
+      if (currentOperand === '0' && number !== '.') {
+        currentOperand = number;
+      } else {
+        currentOperand += number;
+      }
+      updateDisplay();
+    }
+
+    function chooseOperation(op) {
+      if (currentOperand === '') return;
+      if (previousOperand !== '') {
+        compute();
+      }
+      operation = op;
+      previousOperand = currentOperand;
+      currentOperand = '';
+      updateDisplay();
+    }
+
+    function compute() {
+      let computation;
+      const prev = parseFloat(previousOperand);
+      const current = parseFloat(currentOperand);
+      
+      if (isNaN(prev) || isNaN(current)) return;
+      
+      switch (operation) {
+        case '+':
+          computation = prev + current;
+          break;
+        case '-':
+          computation = prev - current;
+          break;
+        case '*':
+          computation = prev * current;
+          break;
+        case '/':
+          if (current === 0) {
+            alert('不能除以零！');
+            return;
+          }
+          computation = prev / current;
+          break;
+        default:
+          return;
+      }
+      
+      currentOperand = computation.toString();
+      operation = undefined;
+      previousOperand = '';
+      updateDisplay();
+    }
+
+    function appendFunction(func) {
+      const current = parseFloat(currentOperand);
+      if (isNaN(current)) return;
+      
+      let result;
+      switch (func) {
+        case 'sqrt':
+          if (current < 0) {
+            alert('不能对负数开平方！');
+            return;
+          }
+          result = Math.sqrt(current);
+          break;
+        case 'square':
+          result = Math.pow(current, 2);
+          break;
+        default:
+          return;
+      }
+      
+      currentOperand = result.toString();
+      updateDisplay();
+    }
+
+    function clearAll() {
+      currentOperand = '0';
+      previousOperand = '';
+      operation = undefined;
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      if (currentOperand.length === 1) {
+        currentOperand = '0';
+      } else {
+        currentOperand = currentOperand.slice(0, -1);
+      }
+      updateDisplay();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+      if (e.key === '.') appendNumber('.');
+      if (e.key === '+') chooseOperation('+');
+      if (e.key === '-') chooseOperation('-');
+      if (e.key === '*') chooseOperation('*');
+      if (e.key === '/') chooseOperation('/');
+      if (e.key === 'Enter' || e.key === '=') compute();
+      if (e.key === 'Escape') clearAll();
+      if (e.key === 'Backspace') deleteLast();
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>

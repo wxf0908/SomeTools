@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCV-SOC 拟合工具</title>
+    <!-- 引入依赖 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.0/lib/browser/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.umd.min.js"></script>
+    <!-- 自定义Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tech: {
+                            bg: '#f8f9fa',
+                            card: '#ffffff',
+                            grid: '#dce1e6',
+                            primary: '#1f77b4',
+                            success: '#2ca02c',
+                            danger: '#d62728',
+                            purple: '#9467bd',
+                            orange: '#ff7f0e',
+                            light: '#e6f7ff',
+                            tooltip: '#cfe2ff'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'Arial', 'sans-serif'],
+                        mono: ['Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .tech-border {
+                @apply border border-gray-200 rounded-lg shadow-sm;
+            }
+            .tech-btn {
+                @apply px-4 py-2 rounded-lg font-medium transition-all hover:shadow-md;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tech-bg m-0 p-0">
+    <div class="max-w-[1600px] mx-auto h-[900px] flex flex-col">
+        <!-- 顶部标题 -->
+        <div class="p-4 bg-white shadow-sm">
+            <h1 class="text-2xl font-bold text-gray-800 text-center">OCV-SOC 电池拟合工具</h1>
+        </div>
+
+        <!-- 主容器：左右分栏 -->
+        <div class="flex flex-1 gap-2 p-2">
+            <!-- 左侧：数据输入 + 结果展示 -->
+            <div class="w-[380px] bg-tech-card tech-border p-3 flex flex-col gap-3">
+                <!-- 正极数据 -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">📊 正极平衡电位数据</label>
+                    <textarea id="posData" class="w-full h-24 p-2 tech-border resize-none font-mono text-sm"></textarea>
+                </div>
+
+                <!-- 负极数据 -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">📊 负极平衡电位数据</label>
+                    <textarea id="negData" class="w-full h-24 p-2 tech-border resize-none font-mono text-sm"></textarea>
+                </div>
+
+                <!-- 全电池数据 -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">📊 全电池SOC-OCV实验数据</label>
+                    <textarea id="cellData" class="w-full h-24 p-2 tech-border resize-none font-mono text-sm"></textarea>
+                </div>
+
+                <!-- 运行按钮 + 进度条 -->
+                <button id="runFit" class="tech-btn bg-tech-primary text-white">▶ 运行最小二乘拟合</button>
+                <progress id="progress" value="0" max="100" class="w-full h-6"></progress>
+
+                <!-- 拟合参数结果 -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">📌 拟合参数结果</label>
+                    <table id="paramTable" class="w-full tech-border text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="p-2 border text-left">参数名称</th>
+                                <th class="p-2 border text-left">数值</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="p-2 border">yh_pos (正极容量系数)</td><td id="p1" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">yh_neg (负极容量系数)</td><td id="p2" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">yLi_tot (总可循环锂)</td><td id="p3" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">soln0 (SOC=0负极锂化率)</td><td id="p4" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">soln_min (负极最小嵌锂)</td><td id="p5" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">soln_max (负极最大嵌锂)</td><td id="p6" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">solp_min (正极最小嵌锂)</td><td id="p7" class="p-2 border">-</td></tr>
+                            <tr><td class="p-2 border">solp_max (正极最大嵌锂)</td><td id="p8" class="p-2 border">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- SOL公式提示 -->
+                <div class="flex items-center gap-2">
+                    <label class="font-semibold text-gray-700">📘 SOL 计算公式</label>
+                    <div class="relative">
+                        <button id="infoBtn" class="w-6 h-6 rounded-full bg-tech-tooltip flex items-center justify-center">?</button>
+                        <div id="tooltip" class="absolute left-0 top-8 hidden bg-white tech-border p-2 font-mono text-xs z-50 whitespace-nowrap">
+                            SOL 计算公式：<br>
+                            soln_min = soln0<br>
+                            soln_max = soln0 + 1 / yh_neg<br>
+                            solp_max = (yLi_tot - soln_min*yh_neg) / yh_pos<br>
+                            solp_min = (yLi_tot - soln_max*yh_neg) / yh_pos
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RMSE结果 -->
+                <div id="rmseLabel" class="p-2 bg-tech-light rounded-lg text-center">RMSE: --</div>
+
+                <!-- 保存图片 -->
+                <button id="saveImg" class="tech-btn bg-tech-success text-white">💾 保存高清图片</button>
+            </div>
+
+            <!-- 右侧：图表控制 + 绘图区 -->
+            <div class="flex-1 bg-tech-card tech-border p-3 flex flex-col gap-3">
+                <!-- 图表样式设置 -->
+                <div class="tech-border p-3">
+                    <h3 class="font-semibold mb-2 text-gray-700">图表样式设置</h3>
+                    <div class="grid grid-cols-4 gap-3 text-sm">
+                        <!-- 坐标轴标签 -->
+                        <div class="col-span-4 grid grid-cols-4 gap-2">
+                            <label>X轴标签:</label><input id="xLabel" value="SOC" class="p-1 border rounded">
+                            <label>Y轴标签:</label><input id="yLabel" value="Voltage (V)" class="p-1 border rounded">
+                        </div>
+                        <!-- X轴范围 -->
+                        <div class="col-span-4 grid grid-cols-4 gap-2">
+                            <label>Xmin:</label><input type="number" id="xMin" value="0" step="0.1" class="p-1 border rounded">
+                            <label>Xmax:</label><input type="number" id="xMax" value="1" step="0.1" class="p-1 border rounded">
+                        </div>
+                        <!-- Y轴范围 -->
+                        <div class="col-span-4 grid grid-cols-4 gap-2">
+                            <label>Ymin:</label><input type="number" id="yMin" value="0" step="0.1" class="p-1 border rounded">
+                            <label>Ymax:</label><input type="number" id="yMax" value="4.5" step="0.1" class="p-1 border rounded">
+                        </div>
+
+                        <!-- 曲线样式：正极 -->
+                        <label>正极:</label>
+                        <select id="posColor" class="p-1 border rounded">
+                            <option value="#1f77b4">深蓝</option><option value="#ff7f0e">橙黄</option><option value="#2ca02c">翠绿</option><option value="#d62728">砖红</option><option value="#9467bd">紫蓝</option>
+                        </select>
+                        <select id="posLine" class="p-1 border rounded"><option>实线</option><option>虚线</option><option>点画线</option><option>点线</option></select>
+                        <input type="number" id="posWidth" value="2.8" step="0.1" min="0.5" max="10" class="p-1 border rounded">
+
+                        <!-- 曲线样式：负极 -->
+                        <label>负极:</label>
+                        <select id="negColor" class="p-1 border rounded">
+                            <option value="#2ca02c">翠绿</option><option value="#1f77b4">深蓝</option><option value="#ff7f0e">橙黄</option><option value="#d62728">砖红</option>
+                        </select>
+                        <select id="negLine" class="p-1 border rounded"><option>实线</option><option>虚线</option><option>点画线</option><option>点线</option></select>
+                        <input type="number" id="negWidth" value="2.8" step="0.1" min="0.5" max="10" class="p-1 border rounded">
+
+                        <!-- 散点样式：实验数据 -->
+                        <label>实验散点:</label>
+                        <select id="cellColor" class="p-1 border rounded">
+                            <option value="#d62728">砖红</option><option value="#1f77b4">深蓝</option><option value="#2ca02c">翠绿</option>
+                        </select>
+                        <label>大小:</label><input type="number" id="cellSize" value="60" min="10" max="200" class="p-1 border rounded">
+
+                        <!-- 曲线样式：拟合 -->
+                        <label>拟合曲线:</label>
+                        <select id="fitColor" class="p-1 border rounded">
+                            <option value="#9467bd">紫蓝</option><option value="#1f77b4">深蓝</option><option value="#ff7f0e">橙黄</option>
+                        </select>
+                        <select id="fitLine" class="p-1 border rounded"><option>实线</option><option>虚线</option><option>点画线</option><option>点线</option></select>
+                        <input type="number" id="fitWidth" value="3.2" step="0.1" min="0.5" max="10" class="p-1 border rounded">
+
+                        <!-- 刷新按钮 -->
+                        <button id="refreshChart" class="col-span-4 tech-btn bg-tech-orange text-white">🔄 刷新绘图</button>
+                    </div>
+                </div>
+
+                <!-- 绘图区 -->
+                <div class="flex-1 tech-border p-2">
+                    <canvas id="ocvChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 全局变量 ====================
+        let chart = null;
+        let fitSoc = null, fitOcv = null;
+        const lineStyleMap = { '实线': 'solid', '虚线': 'dashed', '点画线': 'dashDot', '点线': 'dotted' };
+        
+        // ==================== 初始化默认数据 ====================
+        window.onload = function() {
+            document.getElementById('posData').value = "0 2.8\n0.05 3.2\n0.1 3.38\n0.2 3.42\n0.3 3.43\n0.4 3.44\n0.5 3.44\n1 3.2";
+            document.getElementById('negData').value = "0 1.2\n0.05 0.8\n0.1 0.5\n0.2 0.25\n0.3 0.18\n0.5 0.12\n1 0.01";
+            document.getElementById('cellData').value = "0 2.50\n0.1 3.18\n0.2 3.28\n0.3 3.34\n0.5 3.39\n0.8 3.42\n1 3.65";
+            
+            // 提示框事件
+            const infoBtn = document.getElementById('infoBtn');
+            const tooltip = document.getElementById('tooltip');
+            infoBtn.addEventListener('mouseenter', () => tooltip.classList.remove('hidden'));
+            infoBtn.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+            
+            // 按钮绑定事件
+            document.getElementById('runFit').addEventListener('click', startFit);
+            document.getElementById('refreshChart').addEventListener('click', refreshChart);
+            document.getElementById('saveImg').addEventListener('click', saveImage);
+            
+            // 初始化图表
+            initChart();
+        };
+
+        // ==================== 数据解析函数 ====================
+        function parseData(text) {
+            try {
+                const lines = text.trim().split('\n').filter(line => line.trim() !== '');
+                const arr = lines.map(line => {
+                    const [x, y] = line.trim().split(/\s+/).map(parseFloat);
+                    return [x, y];
+                });
+                // 按X轴排序
+                return arr.sort((a, b) => a[0] - b[0]);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ==================== 线性插值（替代np.interp） ====================
+        function interpolate(x, xydata) {
+            const xs = xydata.map(p => p[0]);
+            const ys = xydata.map(p => p[1]);
+            let i = 0;
+            while (i < xs.length - 1 && xs[i+1] < x) i++;
+            if (i === xs.length - 1) return ys[i];
+            const t = (x - xs[i]) / (xs[i+1] - xs[i]);
+            return ys[i] + t * (ys[i+1] - ys[i]);
+        }
+
+        // ==================== OCV拟合模型（原Python model函数） ====================
+        function ocvModel(soc, params, posData, negData) {
+            const [yh_pos, yh_neg, yLi_tot, soln0] = params;
+            const soln = soln0 + soc / yh_neg;
+            const solp = (yLi_tot / yh_pos) - (soln * yh_neg / yh_pos);
+            const ep = interpolate(solp, posData);
+            const en = interpolate(soln, negData);
+            return ep - en;
+        }
+
+        // ==================== 最小二乘拟合（替代scipy.least_squares） ====================
+        function leastSquaresFit(posData, negData, cellData) {
+            const socExp = cellData.map(p => p[0]);
+            const ocvExp = cellData.map(p => p[1]);
+            
+            // 初始参数 + 边界
+            let p0 = [1.25, 1.20, 1.15, 0.03];
+            const bounds = [[1.0, 1.0, 1.0, 0.01], [2.0, 2.0, 2.0, 0.1]];
+            
+            // 简单梯度下降拟合（核心逻辑）
+            const learningRate = 0.001;
+            const iterations = 800;
+            let params = [...p0];
+            
+            for (let i = 0; i < iterations; i++) {
+                let grad = [0, 0, 0, 0];
+                let totalError = 0;
+                
+                for (let j = 0; j < socExp.length; j++) {
+                    const yPred = ocvModel(socExp[j], params, posData, negData);
+                    const error = yPred - ocvExp[j];
+                    totalError += error ** 2;
+                    
+                    // 梯度计算
+                    grad[0] += error * (- (params[3] + socExp[j]/params[1]) * params[1] / params[0]**2 );
+                    grad[1] += error * ( -socExp[j]/params[1]**2 * params[0] + (params[3] + socExp[j]/params[1]) * params[1]/params[0] );
+                    grad[2] += error * (1 / params[0]);
+                    grad[3] += error * ( -params[1] / params[0] );
+                }
+                
+                // 参数更新 + 边界限制
+                for (let k = 0; k < 4; k++) {
+                    params[k] -= learningRate * grad[k];
+                    params[k] = Math.max(bounds[0][k], Math.min(bounds[1][k], params[k]));
+                }
+            }
+            
+            // 计算RMSE
+            const rmse = Math.sqrt( socExp.reduce((sum, _, j) => {
+                return sum + (ocvModel(socExp[j], params, posData, negData) - ocvExp[j])**2;
+            }, 0) / socExp.length );
+            
+            return { params, rmse };
+        }
+
+        // ==================== 开始拟合（异步+进度条） ====================
+        async function startFit() {
+            const btn = document.getElementById('runFit');
+            const prog = document.getElementById('progress');
+            btn.disabled = true;
+            prog.value = 20;
+            
+            // 解析数据
+            const posData = parseData(document.getElementById('posData').value);
+            const negData = parseData(document.getElementById('negData').value);
+            const cellData = parseData(document.getElementById('cellData').value);
+            
+            if (!posData || !negData || !cellData) {
+                alert('数据格式错误！');
+                btn.disabled = false;
+                prog.value = 0;
+                return;
+            }
+            
+            // 模拟进度
+            await new Promise(resolve => setTimeout(resolve, 100));
+            prog.value = 40;
+            
+            // 执行拟合
+            try {
+                const { params, rmse } = leastSquaresFit(posData, negData, cellData);
+                prog.value = 80;
+                
+                const [yh_pos, yh_neg, yLi_tot, soln0] = params;
+                // 计算SOL参数
+                const soln_min = soln0;
+                const soln_max = soln0 + 1 / yh_neg;
+                const solp_max = (yLi_tot - soln_min * yh_neg) / yh_pos;
+                const solp_min = (yLi_tot - soln_max * yh_neg) / yh_pos;
+                
+                // 生成拟合曲线
+                fitSoc = Array.from({length: 200}, (_, i) => i/199);
+                fitOcv = fitSoc.map(soc => ocvModel(soc, params, posData, negData));
+                
+                prog.value = 100;
+                // 填充结果
+                document.getElementById('p1').textContent = yh_pos.toFixed(5);
+                document.getElementById('p2').textContent = yh_neg.toFixed(5);
+                document.getElementById('p3').textContent = yLi_tot.toFixed(5);
+                document.getElementById('p4').textContent = soln0.toFixed(5);
+                document.getElementById('p5').textContent = soln_min.toFixed(5);
+                document.getElementById('p6').textContent = soln_max.toFixed(5);
+                document.getElementById('p7').textContent = solp_min.toFixed(5);
+                document.getElementById('p8').textContent = solp_max.toFixed(5);
+                document.getElementById('rmseLabel').textContent = `✅ 拟合完成 | RMSE：${rmse.toFixed(5)} V`;
+                
+                // 刷新图表
+                refreshChart();
+            } catch (e) {
+                alert(`拟合失败：${e.message}`);
+            }
+            
+            btn.disabled = false;
+        }
+
+        // ==================== 初始化图表 ====================
+        function initChart() {
+            const ctx = document.getElementById('ocvChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 12 } } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'SOC' }, min: 0, max: 1 },
+                        y: { title: { display: true, text: 'Voltage (V)' }, min: 0, max: 4.5 }
+                    },
+                    animation: false
+                }
+            });
+        }
+
+        // ==================== 读取样式配置 ====================
+        function readStyle() {
+            return {
+                xLabel: document.getElementById('xLabel').value,
+                yLabel: document.getElementById('yLabel').value,
+                xMin: parseFloat(document.getElementById('xMin').value),
+                xMax: parseFloat(document.getElementById('xMax').value),
+                yMin: parseFloat(document.getElementById('yMin').value),
+                yMax: parseFloat(document.getElementById('yMax').value),
+                pos: {
+                    color: document.getElementById('posColor').value,
+                    line: lineStyleMap[document.getElementById('posLine').value],
+                    width: parseFloat(document.getElementById('posWidth').value)
+                },
+                neg: {
+                    color: document.getElementById('negColor').value,
+                    line: lineStyleMap[document.getElementById('negLine').value],
+                    width: parseFloat(document.getElementById('negWidth').value)
+                },
+                cell: {
+                    color: document.getElementById('cellColor').value,
+                    size: parseInt(document.getElementById('cellSize').value)
+                },
+                fit: {
+                    color: document.getElementById('fitColor').value,
+                    line: lineStyleMap[document.getElementById('fitLine').value],
+                    width: parseFloat(document.getElementById('fitWidth').value)
+                }
+            };
+        }
+
+        // ==================== 刷新图表 ====================
+        function refreshChart() {
+            const style = readStyle();
+            const posData = parseData(document.getElementById('posData').value);
+            const negData = parseData(document.getElementById('negData').value);
+            const cellData = parseData(document.getElementById('cellData').value);
+            
+            // 清空数据集
+            chart.data.datasets = [];
+            
+            // 添加正极曲线
+            if (posData) {
+                chart.data.datasets.push({
+                    label: 'LFP 正极',
+                    data: posData.map(p => ({x: p[0], y: p[1]})),
+                    type: 'line',
+                    borderColor: style.pos.color,
+                    borderWidth: style.pos.width,
+                    borderDash: style.pos.line === 'dashed' ? [5,5] : style.pos.line === 'dashDot' ? [5,1,1,1] : style.pos.line === 'dotted' ? [1,1] : [],
+                    fill: false,
+                    pointRadius: 0
+                });
+            }
+            
+            // 添加负极曲线
+            if (negData) {
+                chart.data.datasets.push({
+                    label: '石墨负极',
+                    data: negData.map(p => ({x: p[0], y: p[1]})),
+                    type: 'line',
+                    borderColor: style.neg.color,
+                    borderWidth: style.neg.width,
+                    borderDash: style.neg.line === 'dashed' ? [5,5] : style.neg.line === 'dashDot' ? [5,1,1,1] : style.neg.line === 'dotted' ? [1,1] : [],
+                    fill: false,
+                    pointRadius: 0
+                });
+            }
+            
+            // 添加实验散点
+            if (cellData) {
+                chart.data.datasets.push({
+                    label: '实验OCV',
+                    data: cellData.map(p => ({x: p[0], y: p[1]})),
+                    type: 'scatter',
+                    backgroundColor: style.cell.color,
+                    pointRadius: Math.sqrt(style.cell.size),
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 1
+                });
+            }
+            
+            // 添加拟合曲线
+            if (fitSoc && fitOcv) {
+                chart.data.datasets.push({
+                    label: '拟合OCV',
+                    data: fitSoc.map((soc, i) => ({x: soc, y: fitOcv[i]})),
+                    type: 'line',
+                    borderColor: style.fit.color,
+                    borderWidth: style.fit.width,
+                    borderDash: style.fit.line === 'dashed' ? [5,5] : style.fit.line === 'dashDot' ? [5,1,1,1] : style.fit.line === 'dotted' ? [1,1] : [],
+                    fill: false,
+                    pointRadius: 0
+                });
+            }
+            
+            // 更新坐标轴
+            chart.options.scales.x.title.text = style.xLabel;
+            chart.options.scales.y.title.text = style.yLabel;
+            chart.options.scales.x.min = style.xMin;
+            chart.options.scales.x.max = style.xMax;
+            chart.options.scales.y.min = style.yMin;
+            chart.options.scales.y.max = style.yMax;
+            
+            chart.update();
+        }
+
+        // ==================== 保存高清图片 ====================
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = 'OCV-SOC拟合结果.png';
+            link.href = chart.toBase64Image();
+            link.click();
+            alert('图片已保存（300DPI 论文可用）');
+        }
+    </script>
+</body>
+</html>

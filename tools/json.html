@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON格式化工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .toolbar {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .btn-format {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-format:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-minify {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-minify:hover {
+      background: #218838;
+    }
+
+    .btn-clear {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background: #c82333;
+    }
+
+    .btn-copy {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-copy:hover {
+      background: #138496;
+    }
+
+    .btn-sample {
+      background: #ffc107;
+      color: #333;
+    }
+
+    .btn-sample:hover {
+      background: #e0a800;
+    }
+
+    .editor-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: calc(100vh - 250px);
+      min-height: 500px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .status {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .status.valid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.invalid {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      resize: none;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .output {
+      flex: 1;
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .output.error {
+      color: #dc3545;
+      background: #fff5f5;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px 24px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+      z-index: 100;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 1024px) {
+      .editor-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      
+      .panel {
+        height: 500px;
+      }
+    }
+
+    .json-key { color: #0066cc; }
+    .json-string { color: #009900; }
+    .json-number { color: #ff6600; }
+    .json-boolean { color: #9900cc; font-weight: bold; }
+    .json-null { color: #999; font-style: italic; }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="history.back()">← 返回首页</button>
+  
+  <div class="container">
+    <header>
+      <h1>📄 JSON格式化工具</h1>
+      <p class="subtitle">格式化、压缩、校验JSON数据</p>
+    </header>
+
+    <div class="toolbar">
+      <button class="btn-format" onclick="formatJSON()">✨ 格式化</button>
+      <button class="btn-minify" onclick="minifyJSON()">🗜️ 压缩</button>
+      <button class="btn-sample" onclick="loadSample()">📋 示例</button>
+      <button class="btn-copy" onclick="copyOutput()">📋 复制结果</button>
+      <button class="btn-clear" onclick="clearAll()">🗑️ 清空</button>
+    </div>
+
+    <div class="editor-container">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">输入</span>
+          <span class="status" id="inputStatus">等待输入</span>
+        </div>
+        <textarea id="input" placeholder="在此粘贴JSON数据..." spellcheck="false"></textarea>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">输出</span>
+          <span class="status" id="outputStatus">就绪</span>
+        </div>
+        <div class="output" id="output">结果将显示在这里...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const inputStatus = document.getElementById('inputStatus');
+    const outputStatus = document.getElementById('outputStatus');
+
+    function formatJSON() {
+      const jsonStr = input.value.trim();
+      if (!jsonStr) {
+        showOutput('请输入JSON数据', true);
+        return;
+      }
+
+      try {
+        const obj = JSON.parse(jsonStr);
+        const formatted = JSON.stringify(obj, null, 2);
+        showOutput(syntaxHighlight(formatted), false);
+        inputStatus.textContent = '✓ 有效的JSON';
+        inputStatus.className = 'status valid';
+        outputStatus.textContent = '✓ 格式化完成';
+        outputStatus.className = 'status valid';
+      } catch (e) {
+        showOutput(`❌ JSON解析错误:\n${e.message}`, true);
+        inputStatus.textContent = '✗ 无效的JSON';
+        inputStatus.className = 'status invalid';
+        outputStatus.textContent = '✗ 格式化失败';
+        outputStatus.className = 'status invalid';
+      }
+    }
+
+    function minifyJSON() {
+      const jsonStr = input.value.trim();
+      if (!jsonStr) {
+        showOutput('请输入JSON数据', true);
+        return;
+      }
+
+      try {
+        const obj = JSON.parse(jsonStr);
+        const minified = JSON.stringify(obj);
+        showOutput(minified, false);
+        inputStatus.textContent = '✓ 有效的JSON';
+        inputStatus.className = 'status valid';
+        outputStatus.textContent = '✓ 压缩完成';
+        outputStatus.className = 'status valid';
+      } catch (e) {
+        showOutput(`❌ JSON解析错误:\n${e.message}`, true);
+        inputStatus.textContent = '✗ 无效的JSON';
+        inputStatus.className = 'status invalid';
+      }
+    }
+
+    function syntaxHighlight(json) {
+      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-string';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+
+    function showOutput(content, isError) {
+      output.innerHTML = content;
+      output.className = isError ? 'output error' : 'output';
+    }
+
+    function copyOutput() {
+      const text = output.innerText;
+      if (!text || text === '结果将显示在这里...') {
+        alert('没有可复制的内容');
+        return;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 已复制到剪贴板');
+      }).catch(() => {
+        alert('❌ 复制失败');
+      });
+    }
+
+    function clearAll() {
+      input.value = '';
+      output.textContent = '结果将显示在这里...';
+      output.className = 'output';
+      inputStatus.textContent = '等待输入';
+      inputStatus.className = 'status';
+      outputStatus.textContent = '就绪';
+      outputStatus.className = 'status';
+    }
+
+    function loadSample() {
+      const sample = {
+        "name": "JSON格式化工具",
+        "version": "1.0.0",
+        "features": ["格式化", "压缩", "校验", "语法高亮"],
+        "author": {
+          "name": "Developer",
+          "email": "dev@example.com"
+        },
+        "stats": {
+          "users": 10000,
+          "rating": 4.8,
+          "active": true
+        },
+        "tags": ["json", "formatter", "tool"],
+        "license": null
+      };
+      input.value = JSON.stringify(sample);
+      formatJSON();
+    }
+
+    let timeout;
+    input.addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const jsonStr = input.value.trim();
+        if (jsonStr) {
+          try {
+            JSON.parse(jsonStr);
+            inputStatus.textContent = '✓ 有效的JSON';
+            inputStatus.className = 'status valid';
+          } catch (e) {
+            inputStatus.textContent = '✗ 无效的JSON';
+            inputStatus.className = 'status invalid';
+          }
+        } else {
+          inputStatus.textContent = '等待输入';
+          inputStatus.className = 'status';
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>

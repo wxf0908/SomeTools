@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单位换算器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .converter-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+
+    .tab-btn:hover {
+      border-color: #f093fb;
+      color: #f093fb;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border-color: transparent;
+    }
+
+    .converter-section {
+      display: none;
+    }
+
+    .converter-section.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 18px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #f093fb;
+    }
+
+    select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #f093fb;
+    }
+
+    .result-box {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .result-value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .result-unit {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px 24px;
+      background: white;
+      color: #f093fb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 600px) {
+      .converter-container {
+        padding: 25px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .result-value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="history.back()">← 返回首页</button>
+  
+  <div class="converter-container">
+    <h1>📏 单位换算器</h1>
+    
+    <div class="category-tabs">
+      <button class="tab-btn active" onclick="switchCategory('length')">长度</button>
+      <button class="tab-btn" onclick="switchCategory('weight')">重量</button>
+      <button class="tab-btn" onclick="switchCategory('temperature')">温度</button>
+      <button class="tab-btn" onclick="switchCategory('time')">时间</button>
+      <button class="tab-btn" onclick="switchCategory('speed')">速度</button>
+    </div>
+
+    <div id="length" class="converter-section active">
+      <div class="input-group">
+        <label>输入值</label>
+        <input type="number" id="length-input" placeholder="输入数值" oninput="convertLength()">
+      </div>
+      <div class="input-group">
+        <label>从单位</label>
+        <select id="length-from" onchange="convertLength()">
+          <option value="m">米 (m)</option>
+          <option value="km">千米 (km)</option>
+          <option value="cm">厘米 (cm)</option>
+          <option value="mm">毫米 (mm)</option>
+          <option value="mile">英里</option>
+          <option value="yard">码</option>
+          <option value="foot">英尺</option>
+          <option value="inch">英寸</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>到单位</label>
+        <select id="length-to" onchange="convertLength()">
+          <option value="km">千米 (km)</option>
+          <option value="m">米 (m)</option>
+          <option value="cm">厘米 (cm)</option>
+          <option value="mm">毫米 (mm)</option>
+          <option value="mile">英里</option>
+          <option value="yard">码</option>
+          <option value="foot">英尺</option>
+          <option value="inch">英寸</option>
+        </select>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="length-result">0</div>
+        <div class="result-unit" id="length-result-unit">千米</div>
+      </div>
+    </div>
+
+    <div id="weight" class="converter-section">
+      <div class="input-group">
+        <label>输入值</label>
+        <input type="number" id="weight-input" placeholder="输入数值" oninput="convertWeight()">
+      </div>
+      <div class="input-group">
+        <label>从单位</label>
+        <select id="weight-from" onchange="convertWeight()">
+          <option value="kg">千克 (kg)</option>
+          <option value="g">克 (g)</option>
+          <option value="mg">毫克 (mg)</option>
+          <option value="ton">吨</option>
+          <option value="lb">磅</option>
+          <option value="oz">盎司</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>到单位</label>
+        <select id="weight-to" onchange="convertWeight()">
+          <option value="g">克 (g)</option>
+          <option value="kg">千克 (kg)</option>
+          <option value="mg">毫克 (mg)</option>
+          <option value="ton">吨</option>
+          <option value="lb">磅</option>
+          <option value="oz">盎司</option>
+        </select>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="weight-result">0</div>
+        <div class="result-unit" id="weight-result-unit">克</div>
+      </div>
+    </div>
+
+    <div id="temperature" class="converter-section">
+      <div class="input-group">
+        <label>输入值</label>
+        <input type="number" id="temp-input" placeholder="输入温度" oninput="convertTemperature()">
+      </div>
+      <div class="input-group">
+        <label>从单位</label>
+        <select id="temp-from" onchange="convertTemperature()">
+          <option value="C">摄氏度 (°C)</option>
+          <option value="F">华氏度 (°F)</option>
+          <option value="K">开尔文 (K)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>到单位</label>
+        <select id="temp-to" onchange="convertTemperature()">
+          <option value="F">华氏度 (°F)</option>
+          <option value="C">摄氏度 (°C)</option>
+          <option value="K">开尔文 (K)</option>
+        </select>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="temp-result">0</div>
+        <div class="result-unit" id="temp-result-unit">°F</div>
+      </div>
+    </div>
+
+    <div id="time" class="converter-section">
+      <div class="input-group">
+        <label>输入值</label>
+        <input type="number" id="time-input" placeholder="输入数值" oninput="convertTime()">
+      </div>
+      <div class="input-group">
+        <label>从单位</label>
+        <select id="time-from" onchange="convertTime()">
+          <option value="s">秒</option>
+          <option value="min">分钟</option>
+          <option value="h">小时</option>
+          <option value="day">天</option>
+          <option value="week">周</option>
+          <option value="month">月 (30天)</option>
+          <option value="year">年 (365天)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>到单位</label>
+        <select id="time-to" onchange="convertTime()">
+          <option value="min">分钟</option>
+          <option value="s">秒</option>
+          <option value="h">小时</option>
+          <option value="day">天</option>
+          <option value="week">周</option>
+          <option value="month">月 (30天)</option>
+          <option value="year">年 (365天)</option>
+        </select>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="time-result">0</div>
+        <div class="result-unit" id="time-result-unit">分钟</div>
+      </div>
+    </div>
+
+    <div id="speed" class="converter-section">
+      <div class="input-group">
+        <label>输入值</label>
+        <input type="number" id="speed-input" placeholder="输入数值" oninput="convertSpeed()">
+      </div>
+      <div class="input-group">
+        <label>从单位</label>
+        <select id="speed-from" onchange="convertSpeed()">
+          <option value="ms">米/秒 (m/s)</option>
+          <option value="kmh">千米/时 (km/h)</option>
+          <option value="mph">英里/时 (mph)</option>
+          <option value="knot">节</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>到单位</label>
+        <select id="speed-to" onchange="convertSpeed()">
+          <option value="kmh">千米/时 (km/h)</option>
+          <option value="ms">米/秒 (m/s)</option>
+          <option value="mph">英里/时 (mph)</option>
+          <option value="knot">节</option>
+        </select>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="speed-result">0</div>
+        <div class="result-unit" id="speed-result-unit">千米/时</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchCategory(category) {
+      document.querySelectorAll('.converter-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      document.getElementById(category).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function convertLength() {
+      const value = parseFloat(document.getElementById('length-input').value);
+      const from = document.getElementById('length-from').value;
+      const to = document.getElementById('length-to').value;
+      
+      if (isNaN(value)) {
+        document.getElementById('length-result').textContent = '0';
+        return;
+      }
+      
+      const toMeter = {
+        m: 1, km: 1000, cm: 0.01, mm: 0.001,
+        mile: 1609.34, yard: 0.9144, foot: 0.3048, inch: 0.0254
+      };
+      
+      const result = value * toMeter[from] / toMeter[to];
+      document.getElementById('length-result').textContent = result.toFixed(6).replace(/\.?0+$/, '');
+      document.getElementById('length-result-unit').textContent = document.getElementById('length-to').options[document.getElementById('length-to').selectedIndex].text;
+    }
+
+    function convertWeight() {
+      const value = parseFloat(document.getElementById('weight-input').value);
+      const from = document.getElementById('weight-from').value;
+      const to = document.getElementById('weight-to').value;
+      
+      if (isNaN(value)) {
+        document.getElementById('weight-result').textContent = '0';
+        return;
+      }
+      
+      const toGram = {
+        kg: 1000, g: 1, mg: 0.001, ton: 1000000,
+        lb: 453.592, oz: 28.3495
+      };
+      
+      const result = value * toGram[from] / toGram[to];
+      document.getElementById('weight-result').textContent = result.toFixed(6).replace(/\.?0+$/, '');
+      document.getElementById('weight-result-unit').textContent = document.getElementById('weight-to').options[document.getElementById('weight-to').selectedIndex].text;
+    }
+
+    function convertTemperature() {
+      const value = parseFloat(document.getElementById('temp-input').value);
+      const from = document.getElementById('temp-from').value;
+      const to = document.getElementById('temp-to').value;
+      
+      if (isNaN(value)) {
+        document.getElementById('temp-result').textContent = '0';
+        return;
+      }
+      
+      let celsius;
+      if (from === 'C') celsius = value;
+      else if (from === 'F') celsius = (value - 32) * 5 / 9;
+      else if (from === 'K') celsius = value - 273.15;
+      
+      let result;
+      if (to === 'C') result = celsius;
+      else if (to === 'F') result = celsius * 9 / 5 + 32;
+      else if (to === 'K') result = celsius + 273.15;
+      
+      document.getElementById('temp-result').textContent = result.toFixed(2);
+      document.getElementById('temp-result-unit').textContent = to === 'C' ? '°C' : to === 'F' ? '°F' : 'K';
+    }
+
+    function convertTime() {
+      const value = parseFloat(document.getElementById('time-input').value);
+      const from = document.getElementById('time-from').value;
+      const to = document.getElementById('time-to').value;
+      
+      if (isNaN(value)) {
+        document.getElementById('time-result').textContent = '0';
+        return;
+      }
+      
+      const toSecond = {
+        s: 1, min: 60, h: 3600, day: 86400,
+        week: 604800, month: 2592000, year: 31536000
+      };
+      
+      const result = value * toSecond[from] / toSecond[to];
+      document.getElementById('time-result').textContent = result.toFixed(6).replace(/\.?0+$/, '');
+      document.getElementById('time-result-unit').textContent = document.getElementById('time-to').options[document.getElementById('time-to').selectedIndex].text;
+    }
+
+    function convertSpeed() {
+      const value = parseFloat(document.getElementById('speed-input').value);
+      const from = document.getElementById('speed-from').value;
+      const to = document.getElementById('speed-to').value;
+      
+      if (isNaN(value)) {
+        document.getElementById('speed-result').textContent = '0';
+        return;
+      }
+      
+      const toMps = {
+        ms: 1, kmh: 0.277778, mph: 0.44704, knot: 0.514444
+      };
+      
+      const result = value * toMps[from] / toMps[to];
+      document.getElementById('speed-result').textContent = result.toFixed(6).replace(/\.?0+$/, '');
+      document.getElementById('speed-result-unit').textContent = document.getElementById('speed-to').options[document.getElementById('speed-to').selectedIndex].text;
+    }
+  </script>
+</body>
+</html>

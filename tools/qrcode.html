@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码生成器</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #4facfe;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn-download {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+    }
+
+    .qr-display {
+      text-align: center;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #qrcode {
+      margin: 20px 0;
+    }
+
+    .placeholder {
+      color: #999;
+      font-size: 18px;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px 24px;
+      background: white;
+      color: #4facfe;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+      
+      .options {
+        grid-template-columns: 1fr;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="history.back()">← 返回首页</button>
+  
+  <div class="container">
+    <h1>🔳 二维码生成器</h1>
+    
+    <div class="input-group">
+      <label>输入文本或链接</label>
+      <textarea id="qr-text" placeholder="输入要生成二维码的内容..."></textarea>
+    </div>
+
+    <div class="options">
+      <div class="input-group">
+        <label>尺寸</label>
+        <select id="qr-size">
+          <option value="128">小 (128x128)</option>
+          <option value="200" selected>中 (200x200)</option>
+          <option value="300">大 (300x300)</option>
+          <option value="400">超大 (400x400)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>颜色</label>
+        <select id="qr-color">
+          <option value="#000000">黑色</option>
+          <option value="#0066cc">蓝色</option>
+          <option value="#cc0000">红色</option>
+          <option value="#009900">绿色</option>
+          <option value="#6600cc">紫色</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-generate" onclick="generateQR()">生成二维码</button>
+      <button class="btn-download" onclick="downloadQR()">下载图片</button>
+    </div>
+
+    <div class="qr-display">
+      <div id="qrcode"></div>
+      <div class="placeholder" id="placeholder">二维码将显示在这里</div>
+    </div>
+  </div>
+
+  <script>
+    let qrCodeObj = null;
+
+    function generateQR() {
+      const text = document.getElementById('qr-text').value.trim();
+      if (!text) {
+        alert('请输入要生成二维码的内容！');
+        return;
+      }
+
+      const size = parseInt(document.getElementById('qr-size').value);
+      const color = document.getElementById('qr-color').value;
+
+      const qrcodeDiv = document.getElementById('qrcode');
+      qrcodeDiv.innerHTML = '';
+      
+      qrCodeObj = new QRCode(qrcodeDiv, {
+        text: text,
+        width: size,
+        height: size,
+        colorDark: color,
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      document.getElementById('placeholder').style.display = 'none';
+    }
+
+    function downloadQR() {
+      const canvas = document.querySelector('#qrcode canvas');
+      if (!canvas) {
+        alert('请先生成二维码！');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.download = 'qrcode.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    document.getElementById('qr-text').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        generateQR();
+      }
+    });
+  </script>
+</body>
+</html>
